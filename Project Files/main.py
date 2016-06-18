@@ -32,8 +32,8 @@ class Game():
 		self.all_sprites = pg.sprite.Group()
 		self.platforms = pg.sprite.Group()
 		self.player = Player(self)
-		self.all_sprides.add(self.player)
-		for plat in PLFATFORM_LIST:
+		self.all_sprites.add(self.player)
+		for plat in PLATFORM_LIST:
 			p = Platform(*plat)
 			self.all_sprites.add(p)
 			self.platforms.add(p)
@@ -99,7 +99,7 @@ class Game():
 	def draw(self):
 		# Game Loop - Draw
 		self.screen.fill(BGCOLOR)
-		self.all_sprites_draw(screen)
+		self.all_sprites.draw(self.screen)
 		self.draw_text(str(self.score), 22, WHITE, WIDTH / 2, 15)
 		# Always do this last. *After drawing everything, flip the display.*
 		pg.display.flip()

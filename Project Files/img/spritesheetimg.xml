@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<XnaContent>
+<Asset Type="System.Collections.Generic.Dictionary[System.String, Microsoft.Xna.Framework.Rectangle]">
+<Item><Key>tile 1</Key><Value>0 0 232 55</Value></Item>
+<Item><Key>cloud1</Key><Value>0 56 205 70</Value></Item>
+<Item><Key>cloud2</Key><Value>0 127 205 70</Value></Item>
+<Item><Key>cloud3</Key><Value>233 0 205 70</Value></Item>
+<Item><Key>tile 2</Key><Value>0 198 132 45</Value></Item>
+<Item><Key>drag1</Key><Value>206 71 100 79</Value></Item>
+<Item><Key>drag2</Key><Value>206 151 100 79</Value></Item>
+<Item><Key>drag3</Key><Value>307 71 100 79</Value></Item>
+<Item><Key>drag4</Key><Value>307 151 100 79</Value></Item>
+<Item><Key>jump-fall</Key><Value>0 244 55 79</Value></Item>
+<Item><Key>jump-up</Key><Value>56 244 55 79</Value></Item>
+<Item><Key>run1</Key><Value>133 198 55 79</Value></Item>
+<Item><Key>run2</Key><Value>112 278 55 79</Value></Item>
+<Item><Key>run3</Key><Value>189 231 55 79</Value></Item>
+<Item><Key>run4</Key><Value>245 231 55 79</Value></Item>
+<Item><Key>run5</Key><Value>301 231 55 79</Value></Item>
+<Item><Key>stand1</Key><Value>357 231 55 79</Value></Item>
+<Item><Key>coin_01</Key><Value>0 324 26 23</Value></Item>
+<Item><Key>coin_02</Key><Value>0 348 26 23</Value></Item>
+<Item><Key>coin_03</Key><Value>27 324 26 23</Value></Item>
+<Item><Key>coin_04</Key><Value>27 348 26 23</Value></Item>
+<Item><Key>coin_05</Key><Value>54 324 26 23</Value></Item>
+<Item><Key>coin_06</Key><Value>54 348 26 23</Value></Item>
+<Item><Key>coin_07</Key><Value>81 324 26 23</Value></Item>
+<Item><Key>coin_08</Key><Value>81 348 26 23</Value></Item>
+</Asset>
+</XnaContent>

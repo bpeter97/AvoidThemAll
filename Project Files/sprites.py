@@ -19,7 +19,7 @@ class Player(pg.sprite.Sprite):
 		self.acc = vec(0, PLAYER_GRAV)
 		keys = pg.key.get_pressed()
 		if keys[pg.K_LEFT]:
-			self.acc.x = PLAYER_ACC
+			self.acc.x = -PLAYER_ACC
 		if keys[pg.K_RIGHT]:
 			self.acc.x = PLAYER_ACC
 

@@ -5,6 +5,7 @@ HEIGHT = 600
 FPS = 60
 FONT_NAME = 'arial'
 HS_FILE = "highscore.txt"
+SPRITESHEET = "spritesheetimg.png"
 
 # Player Properties
 PLAYER_ACC = 0.5

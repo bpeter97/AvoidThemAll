@@ -1,9 +1,11 @@
 # Sprite Classes for avoid
 import pygame as pg
 from settings import *
+from random import choice
 vec = pg.math.Vector2
 
 class Spritesheet:
+
 	# Utility class for loading and parsing spritesheets
 	def __init__(self, filename):
 		self.spritesheet = pg.image.load(filename).convert()
@@ -13,10 +15,11 @@ class Spritesheet:
 		image = pg.Surface((width, height))
 		image.blit(self.spritesheet, (0,0), (x, y, width, height))
 		#if images too small, comment out next line or readjust.
-		image = pg.transform.scale(image, (width // 2, height // 2))
+		#image = pg.transform.scale(image, (width // 2, height // 2))
 		return image
 
 class Player(pg.sprite.Sprite):
+
 	def __init__(self, game):
 		pg.sprite.Sprite.__init__(self)
 		self.game = game
@@ -27,8 +30,8 @@ class Player(pg.sprite.Sprite):
 		self.load_images()
 		self.image = self.standing_frames[0]
 		self.rect = self.image.get_rect()
-		self.rect.center = (WIDTH / 2, HEIGHT / 2)
-		self.pos = vec(WIDTH / 2, HEIGHT / 2)
+		self.rect.center = (40, HEIGHT - 100)
+		self.pos = vec(40, HEIGHT - 100)
 		self.vel = vec(0, 0)
 		self.acc = vec(0, 0)
 
@@ -37,11 +40,11 @@ class Player(pg.sprite.Sprite):
 								self.game.spritesheet.get_image(357, 231, 55, 79)]
 		for frame in self.standing_frames:
 			frame.set_colorkey(BLACK)
-		self.walk_frames_r = [self.game.spritesheet.get_image(133, 198, 55, 79),
-							  self.game.spritesheet.get_image(112, 278, 55, 79),
-							  self.game.spritesheet.get_image(189, 231, 55, 79),
-							  self.game.spritesheet.get_image(245, 231, 55, 79),
-							  self.game.spritesheet.get_image(301, 231, 55, 79)]
+		self.walk_frames_r = [self.game.spritesheet.get_image(134, 199, 53, 78),
+							  self.game.spritesheet.get_image(113, 279, 53, 78),
+							  self.game.spritesheet.get_image(190, 232, 53, 78),
+							  self.game.spritesheet.get_image(246, 232, 53, 78),
+							  self.game.spritesheet.get_image(302, 232, 53, 78)]
 		for frame in self.walk_frames_r:
 			frame.set_colorkey(BLACK)
 		self.walk_frames_l = []
@@ -65,41 +68,70 @@ class Player(pg.sprite.Sprite):
 		self.acc.x += self.vel.x * PLAYER_FRICTION
 		# Equations of Motion
 		self.vel += self.acc
+		if abs(self.vel.x) < 0.1:
+			self.vel.x = 0
 		self.pos += self.vel + 0.5 * self.acc
 		# Wrap around edges of screen
-		if self.pos.x > WIDTH:
-			self.pos.x = 0
-		if self.pos.x < 0:
-			self.pos.x = WIDTH
+		if self.pos.x > WIDTH + self.rect.width / 2:
+			self.pos.x = 0 - self.rect.width / 2
+		if self.pos.x < 0 - self.rect.width / 2:
+			self.pos.x = WIDTH + self.rect.width / 2
 
 		# Gather final position
 		self.rect.midbottom = self.pos
 
 	def animate(self):
-
 		now = pg.time.get_ticks()
+		
+		# Check if character is moving.
+		if self.vel.x != 0:
+			self.walking = True
+		else:
+			self.walking = False
+
+		# Animate character when walking.
+		if self.walking:
+			if now - self.last_update > 100:
+				self.last_update = now
+				self.current_frame = (self.current_frame + 1) % len(self.walk_frames_l)
+				#bottom = self.rect.bottom
+				if self.vel.x > 0:
+					self.image = self.walk_frames_r[self.current_frame]
+				else:
+					self.image = self.walk_frames_l[self.current_frame]
+				#self.rect = self.image.get_rect()
+				#self.rect.bottom = bottom
+
+		# This is the code to animate the idle character.
 		if not self.jumping and not self.walking:
 			if now - self.last_update > 350:
 				self.last_update = now
 				self.current_frame = (self.current_frame + 1) % len(self.standing_frames)
-				bottom = self.rect.bottom
+				#bottom = self.rect.bottom
 				self.image = self.standing_frames[self.current_frame]
-				self.rect = self.image.get_rect()
-				self.rect.bottom = bottom
+				#self.rect = self.image.get_rect()
+				#self.rect.bottom = bottom 
 
 	def jump(self):
 		# Jump only if standing on something
-		self.rect.x += 1
+		self.rect.x += 2
 		hits = pg.sprite.spritecollide(self, self.game.platforms, False)
-		self.rect.x -= 1
-		if hits:
+		self.rect.x -= 2
+		if hits and not self.jumping:
+			self.game.jump_sound.play()
+			self.jumping = True
 			self.vel.y = -PLAYER_JUMP
 
+
 class Platform(pg.sprite.Sprite):
-	def __init__(self, x, y, w, h):
+
+	def __init__(self, game, x, y):
 		pg.sprite.Sprite.__init__(self)
-		self.image = pg.Surface((w, h))
-		self.image.fill(GREEN)
+		self.game = game
+		images = [self.game.spritesheet.get_image(6, 4, 222, 47),
+				 self.game.spritesheet.get_image(3, 203, 121, 35)]
+		self.image = choice(images)
+		self.image.set_colorkey(BLACK)
 		self.rect = self.image.get_rect()
 		self.rect.x = x
 		self.rect.y = y

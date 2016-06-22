@@ -1,7 +1,7 @@
 # Sprite Classes for avoid
 import pygame as pg
 from settings import *
-from random import choice
+from random import choice, randrange
 vec = pg.math.Vector2
 
 class Spritesheet:
@@ -14,14 +14,15 @@ class Spritesheet:
 		#grab image out of larger sheet.
 		image = pg.Surface((width, height))
 		image.blit(self.spritesheet, (0,0), (x, y, width, height))
-		#if images too small, comment out next line or readjust.
+		#Commented out next line due to image being perfect at original size.
 		#image = pg.transform.scale(image, (width // 2, height // 2))
 		return image
 
 class Player(pg.sprite.Sprite):
 
 	def __init__(self, game):
-		pg.sprite.Sprite.__init__(self)
+		self.groups = game.all_sprites
+		pg.sprite.Sprite.__init__(self, self.groups)
 		self.game = game
 		self.walking = False
 		self.jumping = False
@@ -122,12 +123,13 @@ class Player(pg.sprite.Sprite):
 			self.jumping = True
 			self.vel.y = -PLAYER_JUMP
 
-
 class Platform(pg.sprite.Sprite):
 
 	def __init__(self, game, x, y):
-		pg.sprite.Sprite.__init__(self)
+		self.groups = game.all_sprites, game.platforms
+		pg.sprite.Sprite.__init__(self, self.groups)
 		self.game = game
+
 		images = [self.game.spritesheet.get_image(6, 4, 222, 47),
 				 self.game.spritesheet.get_image(3, 203, 121, 35)]
 		self.image = choice(images)
@@ -135,3 +137,67 @@ class Platform(pg.sprite.Sprite):
 		self.rect = self.image.get_rect()
 		self.rect.x = x
 		self.rect.y = y
+		if randrange(100) < POW_SPAWN_PCT:
+			Pow(self.game, self)
+
+class Pow(pg.sprite.Sprite):
+
+	def __init__(self, game, plat):
+		self.groups = game.all_sprites, game.powerups
+		pg.sprite.Sprite.__init__(self, self.groups)
+		self.game = game
+		self.plat = plat
+		self.type = choice(['boost'])
+		self.dir = path.dirname(__file__)
+		img_dir = path.join(self.dir, 'img')
+		boost_img = pg.image.load(os.path.join(img_dir, 'can.png'))
+		self.image = choice(boost_img)
+		self.image.set_colorkey(BLACK)
+		self.rect = self.image.get_rect()
+		self.rect.centerx = self.plat.rect.centerx
+		self.rect.bottom = self.plat.rect.top - 5
+
+	def update(self):
+		self.rect.bottom = self.plat.rect.top - 5
+		if not self.game.platforms.has(self.plat):
+			self.kill()
+
+class Mob(pg.sprite.Sprite):	
+
+	def __init__(self, game):
+		self.groups = game.all_sprites, game.mobs
+		pg.sprite.Sprite.__init__(self, self.groups)
+		self.game = game
+		self.image_up = self.game.spritesheet.get_image(206, 151, 100, 79)
+		self.image_up.set_colorkey(BLACK)
+		self.image_mid = self.game.spritesheet.get_image(07, 71, 100, 79)
+		self.image_mid.set_colorkey(BLACK)
+		self.image_down = self.game.spritesheet.get_image(206, 71, 100, 79)
+		self.image_down.set_colorkey(BLACK)
+		self.image = self.image_up
+		self.rect = self.image.get_rect()
+		self.rect.centerx = choice([-100, WIDTH + 100])
+		self.vx = randrange(1, 4)
+		if self.rect.centerx > WIDTH:
+			self.vx *= -1
+		self.rect.y = randrange(HEIGHT / 2)
+		self.vy = 0
+		self.dy = 0.5
+
+	def update(self):
+		self.rect.x += self.vx
+		self.vy += self.dy
+		if self.vy > 3 or self.vy < -3:
+			self.dy *= -1
+		center = self.rect.center
+		if self.dy < 0 and self.vy < 1.5:
+			self.image = self.image_mid
+		elif self.dy < 0 and self.vy > 1.5: 
+			self.image = self.image_up
+		else:
+			self.image = self.image_down
+		self.rect = self.image.get_rect()
+		self.rect.center = center
+		self.rect.y += self.vy
+		if self.rect.left > WIDTH + 100 or self.rect.right < -100:
+			self.kill()

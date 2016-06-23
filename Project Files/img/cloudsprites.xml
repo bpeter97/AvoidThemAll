@@ -1,0 +1,1 @@
+<textureatlas xmlns="http://www.w3.org/1999/xhtml" imagepath="spritesheet.png"><subtexture name="cloud1" x="0" y="0" width="900" height="600"></subtexture><subtexture name="cloud2" x="0" y="601" width="900" height="600"></subtexture><subtexture name="cloud3" x="901" y="0" width="900" height="600"></subtexture></textureatlas>

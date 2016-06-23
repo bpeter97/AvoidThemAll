@@ -21,6 +21,7 @@ class Spritesheet:
 class Player(pg.sprite.Sprite):
 
 	def __init__(self, game):
+		self._layer = PLAYER_LAYER
 		self.groups = game.all_sprites
 		pg.sprite.Sprite.__init__(self, self.groups)
 		self.game = game
@@ -113,6 +114,8 @@ class Player(pg.sprite.Sprite):
 				#self.rect = self.image.get_rect()
 				#self.rect.bottom = bottom 
 
+		self.mask = pg.mask.from_surface(self.image)
+
 	def jump(self):
 		# Jump only if standing on something
 		self.rect.x += 2
@@ -126,6 +129,7 @@ class Player(pg.sprite.Sprite):
 class Platform(pg.sprite.Sprite):
 
 	def __init__(self, game, x, y):
+		self._layer = PLATFORM_LAYER
 		self.groups = game.all_sprites, game.platforms
 		pg.sprite.Sprite.__init__(self, self.groups)
 		self.game = game
@@ -140,18 +144,35 @@ class Platform(pg.sprite.Sprite):
 		if randrange(100) < POW_SPAWN_PCT:
 			Pow(self.game, self)
 
+class Clouds(pg.sprite.Sprite):
+
+	def __init__(self, game, x, y):
+		self._layer = CLOUD_LAYER
+		self.groups = game.all_sprites, game.clouds
+		pg.sprite.Sprite.__init__(self, self.groups)
+		self.game = game
+
+		clouds = [self.game.cloudsprite.get_image(0, 0, 900,  600), 
+				  self.game.cloudsprite.get_image(0, 601, 900,  600),
+				  self.game.cloudsprite.get_image(901, 0, 900,  600)]
+
+		self.image = choice(clouds)
+		self.image = pg.transform.scale(self.image, (900 // 2, 600 // 2))
+		self.image.set_colorkey(BLACK)
+		self.rect = self.image.get_rect()
+		self.rect.x = x
+		self.rect.y = y
+
 class Pow(pg.sprite.Sprite):
 
 	def __init__(self, game, plat):
+		self._layer = POW_LAYER
 		self.groups = game.all_sprites, game.powerups
 		pg.sprite.Sprite.__init__(self, self.groups)
 		self.game = game
 		self.plat = plat
 		self.type = choice(['boost'])
-		self.dir = path.dirname(__file__)
-		img_dir = path.join(self.dir, 'img')
-		boost_img = pg.image.load(os.path.join(img_dir, 'can.png'))
-		self.image = choice(boost_img)
+		self.image = self.game.spritesheet2.get_image(0, 0, 18, 34)
 		self.image.set_colorkey(BLACK)
 		self.rect = self.image.get_rect()
 		self.rect.centerx = self.plat.rect.centerx
@@ -165,21 +186,26 @@ class Pow(pg.sprite.Sprite):
 class Mob(pg.sprite.Sprite):	
 
 	def __init__(self, game):
+		self._layer = MOB_LAYER
 		self.groups = game.all_sprites, game.mobs
 		pg.sprite.Sprite.__init__(self, self.groups)
 		self.game = game
-		self.image_up = self.game.spritesheet.get_image(206, 151, 100, 79)
+		self.image_up = self.game.spritesheet.get_image(208, 165, 97, 49)
 		self.image_up.set_colorkey(BLACK)
-		self.image_mid = self.game.spritesheet.get_image(07, 71, 100, 79)
+		self.image_mid = self.game.spritesheet.get_image(309, 85, 97, 56)
 		self.image_mid.set_colorkey(BLACK)
-		self.image_down = self.game.spritesheet.get_image(206, 71, 100, 79)
+		self.image_down = self.game.spritesheet.get_image(208, 75, 97, 60)
 		self.image_down.set_colorkey(BLACK)
 		self.image = self.image_up
 		self.rect = self.image.get_rect()
 		self.rect.centerx = choice([-100, WIDTH + 100])
+		self.dx = 0
 		self.vx = randrange(1, 4)
 		if self.rect.centerx > WIDTH:
 			self.vx *= -1
+			self.dx = 1
+		else:
+			self.dx = 0
 		self.rect.y = randrange(HEIGHT / 2)
 		self.vy = 0
 		self.dy = 0.5
@@ -187,15 +213,29 @@ class Mob(pg.sprite.Sprite):
 	def update(self):
 		self.rect.x += self.vx
 		self.vy += self.dy
+
 		if self.vy > 3 or self.vy < -3:
 			self.dy *= -1
+
 		center = self.rect.center
-		if self.dy < 0 and self.vy < 1.5:
-			self.image = self.image_mid
-		elif self.dy < 0 and self.vy > 1.5: 
-			self.image = self.image_up
+
+		if self.dx == 0:
+			if self.dy < 0 and self.vy < 1.5:
+				self.image = self.image_mid
+			elif self.dy < 0 and self.vy > 1.5: 
+				self.image = self.image_up
+			else:
+				self.image = self.image_down
 		else:
-			self.image = self.image_down
+			if self.dy < 0 and self.vy < 1.5:
+				self.image = pg.transform.flip(self.image_mid, True, False)
+			elif self.dy < 0 and self.vy > 1.5: 
+				self.image = pg.transform.flip(self.image_up, True, False)
+			else:
+				self.image = pg.transform.flip(self.image_down, True, False)
+
+		self.mask = pg.mask.from_surface(self.image)
+
 		self.rect = self.image.get_rect()
 		self.rect.center = center
 		self.rect.y += self.vy

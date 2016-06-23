@@ -4,6 +4,7 @@
 # MC Happy Ending by http://opengameart.org/users/varon-kein
 # Boost image by http://opengameart.org/users/clint-bellanger
 # License Information: https://creativecommons.org/licenses/by/3.0/
+# Boost sound by https://apricot.blender.org/
 
 import pygame as pg
 import random
@@ -37,24 +38,29 @@ class Game():
 
 		# Load Images
 		self.spritesheet = Spritesheet(path.join(img_dir, SPRITESHEET))
+		self.spritesheet2 = Spritesheet(path.join(img_dir, SPRITESHEET2))
+		self.cloudsprite = Spritesheet(path.join(img_dir, CLOUDSPRITE))
 
 		# Load up sounds.
 		self.snd_dir = path.join(self.dir, 'snd')
 		self.jump_sound = pg.mixer.Sound(path.join(self.snd_dir, 'Jump.ogg'))
 		#Update line below with new boost sound file!
-		#self.boost_sound = pg.mixer.Sound(path.join(self.snd_dir, 'Boost.ogg'))
 
 	def new(self):
 
 		# Restarts The Game
 		self.score = 0
-		self.all_sprites = pg.sprite.Group()
+		self.all_sprites = pg.sprite.LayeredUpdates()
 		self.platforms = pg.sprite.Group()
 		self.powerups = pg.sprite.Group()
 		self.mobs = pg.sprite.Group()
+		self.clouds = pg.sprite.Group()
 		self.player = Player(self)
 		for plat in PLATFORM_LIST:
 			Platform(self, *plat)
+		for clouds in CLOUDS_LIST:
+			Clouds(self, *clouds)
+		self.mob_timer = 0
 		pg.mixer.music.load(path.join(self.snd_dir, 'happy.ogg'))
 		self.run()
 
@@ -74,6 +80,15 @@ class Game():
 		self.all_sprites.update()
 
 		# Spawn a mob or not.
+		now = pg.time.get_ticks()
+		if now - self.mob_timer > 5000 + random.choice([-1000,-500,0,500,1000]):
+			self.mob_timer = now
+			Mob(self)
+
+		# Hit mobs
+		mob_hits = pg.sprite.spritecollide(self.player, self.mobs, False, pg.sprite.collide_mask)
+		if mob_hits:
+			self.playing = False
 
 		# check if player hits platform - only if falling.
 		if self.player.vel.y > 0:
@@ -94,6 +109,12 @@ class Game():
 		# if player reaches the top 1/4 of the screen
 		if self.player.rect.top <= HEIGHT / 4:
 			self.player.pos.y += max(abs(self.player.vel.y), 2)
+			for cloud in self.clouds:
+				cloud.rect.y += max(abs(self.player.vel.y), 2)
+				if cloud.rect.top >= HEIGHT:
+					cloud.kill()
+			for mob in self.mobs:
+				mob.rect.y += max(abs(self.player.vel.y), 2)
 			for plat in self.platforms:
 				plat.rect.y += max(abs(self.player.vel.y), 2)
 				if plat.rect.top >= HEIGHT:
@@ -104,7 +125,8 @@ class Game():
 		pow_hits = pg.sprite.spritecollide(self.player, self.powerups, True)
 		for pow in pow_hits:
 			if pow.type == 'boost':
-				#self.boost_sound.play()
+				self.boost_sound = pg.mixer.Sound(path.join(self.snd_dir, 'Boost.ogg'))
+				self.boost_sound.play()
 				self.player.vel.y = -BOOST_POWER
 				self.player.jumping = False
 
@@ -123,6 +145,12 @@ class Game():
 			Platform(self, random.randrange(0, WIDTH - width),
 					random.randrange(-75, -30))
 
+		# Spawn clouds
+		while len(self.clouds) < 5:
+			width = random.randrange(50, 100)
+			Clouds(self, random.randrange(0, WIDTH - width),
+				   random.randrange(-800, -200))
+
 	def events(self):
 		# Game Loop - Events
 		for event in pg.event.get():
@@ -139,7 +167,6 @@ class Game():
 		# Game Loop - Draw
 		self.screen.fill(BGCOLOR)
 		self.all_sprites.draw(self.screen)
-		self.screen.blit(self.player.image, self.player.rect)
 		self.draw_text(str(self.score), 22, WHITE, WIDTH / 2, 15)
 		# Always do this last. *After drawing everything, flip the display.*
 		pg.display.flip()
